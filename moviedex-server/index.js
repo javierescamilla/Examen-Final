@@ -3,6 +3,10 @@ let bodyParser = require( 'body-parser' );
 let mongoose = require( 'mongoose' );
 let jsonParser = bodyParser.json();
 let { DATABASE_URL, PORT } = require( './config' );
+let uuid = require( 'uuid' );
+
+let {moviesMethods} = require('./model.js');
+
 
 let app = express();
 
@@ -17,6 +21,47 @@ app.use(function(req, res, next) {
 });
 
 /* Tu código va aquí */
+
+app.get('/movies', (req, res) => {
+	moviesMethods.getMovies()
+		.then(movies => {
+			res.status(201).json(movies)
+		})
+		.catch(err => {
+			res.statusMessage = "Somethign whent wrong withe the database"
+			return res.status(500).json({
+				error : "Something went wrong with the database",
+				status : 500
+			});
+		});
+})
+
+app.post('/movies', jsonParser, (req, res) => {
+	let fitlTitle = req.body.film_title;
+	let year = req.body.year;
+	let rating = req.body.rating;
+
+	let moviesPost = {
+		film_id : uuid(),
+		film_title : fitlTitle,
+		year : year,
+		rating : rating
+	}
+
+    moviesMethods.postMovies(moviesPost)
+       .then(moviesResponse => {
+		console.log(moviesResponse)
+           res.status(201).json(moviesResponse);
+       })
+       .catch(err => {
+           res.statusMessage = "Something went wrong with the data base";
+           return res.status(500).json({
+               "error" : "Something went wrong with the data base",
+               "status" : 500
+           });
+       });
+});
+
 
 let server;
 
